@@ -10,7 +10,7 @@
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-128.png"/><!-- ! Add-in icon -->
   <SupportUrl DefaultValue="https://quire.io/help"/><!-- ? Add-in support url -->
   <AppDomains><!-- ! Add-in domains -->
-    <AppDomain>https://8461-122-116-28-7.ngrok-free.app</AppDomain>
+    <AppDomain>https://52ee-122-116-28-7.ngrok-free.app</AppDomain>
     <AppDomain>https://localhost/</AppDomain>
   </AppDomains>
   <Hosts>

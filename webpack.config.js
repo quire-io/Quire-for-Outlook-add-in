@@ -3,10 +3,11 @@
 const devCerts = require("office-addin-dev-certs");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const Dotenv = require('dotenv-webpack');
+const webpack = require("webpack");
+const Dotenv = require("dotenv-webpack");
 
 const urlDev = "https://localhost:3000/";
-const urlProd = "https://quire.io/"; // CHANGE THIS TO YOUR PRODUCTION DEPLOYMENT LOCATION
+const urlProd = "https://quire.io/";
 
 async function getHttpsOptions() {
   const httpsOptions = await devCerts.getHttpsServerOptions();
@@ -19,7 +20,8 @@ module.exports = async (env, options) => {
     devtool: "source-map",
     entry: {
       polyfill: ["core-js/stable", "regenerator-runtime/runtime"],
-      taskpane: ["./src/taskpane/taskpane.ts", "./src/taskpane/taskpane.html"],
+      vendor: ["react", "react-dom", "core-js", "@fluentui/react-components", "@fluentui/react-icons"],
+      taskpane: ["./src/taskpane/index.tsx", "./src/taskpane/taskpane.html"],
       commands: "./src/commands/commands.ts",
       callback: ["./src/auth/callback.ts", "./src/auth/callback.html"],
     },
@@ -27,7 +29,7 @@ module.exports = async (env, options) => {
       clean: true,
     },
     resolve: {
-      extensions: [".ts", ".html", ".js"],
+      extensions: [".ts", ".tsx", ".html", ".js"],
     },
     module: {
       rules: [
@@ -42,12 +44,17 @@ module.exports = async (env, options) => {
           },
         },
         {
+          test: /\.tsx?$/,
+          exclude: /node_modules/,
+          use: ["ts-loader"],
+        },
+        {
           test: /\.html$/,
           exclude: /node_modules/,
           use: "html-loader",
         },
         {
-          test: /\.(png|jpg|jpeg|gif|ico)$/,
+          test: /\.(png|jpg|jpeg|ttf|woff|woff2|gif|ico)$/,
           type: "asset/resource",
           generator: {
             filename: "assets/[name][ext][query]",
@@ -57,11 +64,6 @@ module.exports = async (env, options) => {
     },
     plugins: [
       new Dotenv(),
-      new HtmlWebpackPlugin({
-        filename: "taskpane.html",
-        template: "./src/taskpane/taskpane.html",
-        chunks: ["polyfill", "taskpane"],
-      }),
       new CopyWebpackPlugin({
         patterns: [
           {
@@ -82,17 +84,26 @@ module.exports = async (env, options) => {
         ],
       }),
       new HtmlWebpackPlugin({
+        filename: "taskpane.html",
+        template: "./src/taskpane/taskpane.html",
+        chunks: ["polyfill", "vendor", "taskpane"],
+      }),
+      new HtmlWebpackPlugin({
         filename: "commands.html",
         template: "./src/commands/commands.html",
-        chunks: ["polyfill", "commands"],
+        chunks: ["commands"],
       }),
       new HtmlWebpackPlugin({
         filename: "callback.html",
         template: "./src/auth/callback.html",
-        chunks: ["polyfill", "callback"],
-      })
+        chunks: ["callback"],
+      }),
+      new webpack.ProvidePlugin({
+        Promise: ["es6-promise", "Promise"],
+      }),
     ],
     devServer: {
+      hot: true,
       headers: {
         "Access-Control-Allow-Origin": "*",
       },
