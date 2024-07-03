@@ -5,26 +5,10 @@
 
 /* global document, Office */
 
-import { auth, print } from "../quireService";
+import { quireAuthentication, KEY_TOKEN, KEY_REFRESH } from "../quireService";
 
-Office.onReady((info) => {
-  if (info.host === Office.HostType.Outlook) {
-    document.getElementById("sideload-msg").style.display = "none";
-    document.getElementById("app-body").style.display = "flex";
-    document.getElementById("run").onclick = run;
-  }
-});
-
-export async function run() {
-
-  // const item = Office.context.mailbox.item;
-  // document.getElementById("item-subject").innerHTML = "<b>Subject:</b> <br/>" + item.subject;
-
-  try {
-    const token =  await auth();
-    print("TOKEN");
-    print(token);
-  } catch (error) {
-    console.error(error);
-  }
-}
+export async function login(): Promise<String | null> {
+  if (await quireAuthentication())
+    return localStorage.getItem(KEY_TOKEN);
+  return null;
+};
