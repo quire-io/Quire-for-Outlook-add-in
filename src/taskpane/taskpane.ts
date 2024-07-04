@@ -4,8 +4,8 @@
  */
 
 /* global document, Office */
-
-import { quireAuthentication, KEY_TOKEN, KEY_REFRESH } from "../quireService";
+import { KEY_TOKEN } from "../constants";
+import { quireAuthentication } from "../quireService";
 
 export async function login(): Promise<String | null> {
   if (await quireAuthentication())
