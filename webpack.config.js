@@ -22,7 +22,6 @@ module.exports = async (env, options) => {
       polyfill: ["core-js/stable", "regenerator-runtime/runtime"],
       vendor: ["react", "react-dom", "core-js", "@fluentui/react-components", "@fluentui/react-icons"],
       taskpane: ["./src/taskpane/index.tsx", "./src/taskpane/taskpane.html"],
-      commands: "./src/commands/commands.ts",
       callback: ["./src/auth/callback.ts", "./src/auth/callback.html"],
     },
     output: {
@@ -87,11 +86,6 @@ module.exports = async (env, options) => {
         filename: "taskpane.html",
         template: "./src/taskpane/taskpane.html",
         chunks: ["polyfill", "vendor", "taskpane"],
-      }),
-      new HtmlWebpackPlugin({
-        filename: "commands.html",
-        template: "./src/commands/commands.html",
-        chunks: ["commands"],
       }),
       new HtmlWebpackPlugin({
         filename: "callback.html",

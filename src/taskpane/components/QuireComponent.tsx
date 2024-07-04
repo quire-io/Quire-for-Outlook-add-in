@@ -1,4 +1,4 @@
-import { Button, makeStyles } from "@fluentui/react-components"
+import { Button, makeStyles, mergeClasses } from "@fluentui/react-components"
 import { COLOR_PRIMARY, COLOR_SECONDARY } from "../../constants";
 import React from "react";
 
@@ -18,13 +18,14 @@ interface QuirePrimaryButtonProps {
   onClick?: () => void;
   content?: string;
   style?: React.CSSProperties;
+  className?: string;
 }
 
 export const QuirePrimaryButton: React.FC<QuirePrimaryButtonProps> = (prop: QuirePrimaryButtonProps) => {
   const btnStyles = buttonStyles();
 
   return (
-    <Button className={btnStyles.quire__primaryButton}
+    <Button className={mergeClasses(btnStyles.quire__primaryButton, prop.className)}
       style={prop.style}
       onClick={prop.onClick}>{prop.content}</Button>
   );

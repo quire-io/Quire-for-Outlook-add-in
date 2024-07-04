@@ -3,6 +3,7 @@ import { makeStyles } from "@fluentui/react-components";
 import { attemptAutoLogin, print, quireAuthentication } from "../../quireService";
 import { Image } from "@fluentui/react-components";
 import LoginView from "../pages/loginView";
+import TaskView from "../pages/createTaskView";
 
 const useStyles = makeStyles({
   root: {
@@ -17,7 +18,7 @@ const useStyles = makeStyles({
 });
 
 enum AppView {
-  login, main, loading
+  login, task, loading
 }
 
 const App: React.FC = () => {
@@ -27,20 +28,20 @@ const App: React.FC = () => {
   React.useEffect(() => {
     Office.onReady(async () => {
       const isLoggedin = await attemptAutoLogin();
-      setTimeout(() => setView(isLoggedin ? AppView.main : AppView.login), 1000);
+      setTimeout(() => setView(isLoggedin ? AppView.task : AppView.login), 1000);
     });
-  })
+  }, [])
 
   async function onLogIn() {
     if (await quireAuthentication())
-      setView(AppView.main);
+      setView(AppView.task);
     else { //TODO: pop error message
       setView(AppView.login);
       console.error("Failed to login");
     }
   }
 
-  function _getView(view: AppView): JSX.Element {
+  function getView(view: AppView): JSX.Element {
     switch (view) {
       case AppView.login:
         return <LoginView onLogIn={onLogIn}/>;
@@ -49,6 +50,8 @@ const App: React.FC = () => {
           <section className={styles.loading__view}>
             <Image src="assets/loading.png" alt="Loading" title="Loading" />
           </section>);
+      case AppView.task:
+        return <TaskView />;
       default:
         return <div>Not implemented</div>;
     }
@@ -56,7 +59,7 @@ const App: React.FC = () => {
 
   return (
     <div className={styles.root}>
-      {_getView(currentView)}
+      {getView(currentView)}
     </div>
   );
 };
