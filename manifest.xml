@@ -5,12 +5,12 @@
   <ProviderName>Quire</ProviderName><!-- ? Add-in provider name -->
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Quire"/><!-- ? Add-in name -->
-  <Description DefaultValue="A template to get started."/><!-- ! Add-in description -->
-  <IconUrl DefaultValue="https://localhost:3000/assets/icon-64.png"/>
-  <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-128.png"/><!-- ! Add-in icon -->
+  <Description DefaultValue="Unfold your idea."/><!-- ! Add-in description -->
+  <IconUrl DefaultValue="https://localhost:3000/assets/logo_64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/logo_128.png"/><!-- ! Add-in icon -->
   <SupportUrl DefaultValue="https://quire.io/help"/><!-- ? Add-in support url -->
   <AppDomains><!-- ! Add-in domains -->
-    <AppDomain>https://52ee-122-116-28-7.ngrok-free.app</AppDomain>
+    <AppDomain>https://425b-122-116-28-7.ngrok-free.app</AppDomain>
     <AppDomain>https://localhost/</AppDomain>
   </AppDomains>
   <Hosts>
@@ -44,7 +44,6 @@
       <Host xsi:type="MailHost">
         <DesktopFormFactor>
           <FunctionFile resid="Commands.Url"/>
-          <!-- message reading -->
           <ExtensionPoint xsi:type="MessageReadCommandSurface">
             <OfficeTab id="TabDefault">
               <Group id="msgReadGroup">
@@ -64,23 +63,6 @@
                     <SourceLocation resid="Taskpane.Url"/>
                   </Action>
                 </Control>
-                <!-- button template -->
-                <Control xsi:type="Button" id="ActionButton">
-                  <Label resid="ActionButton.Label"/>
-                  <Supertip>
-                    <Title resid="ActionButton.Label"/>
-                    <Description resid="ActionButton.Tooltip"/>
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="Icon.16x16"/>
-                    <bt:Image size="32" resid="Icon.32x32"/>
-                    <bt:Image size="80" resid="Icon.80x80"/>
-                  </Icon>
-                  <Action xsi:type="ExecuteFunction">
-                    <FunctionName>action</FunctionName>
-                  </Action>
-                </Control>
-                <!-- button template -->
               </Group>
             </OfficeTab>
           </ExtensionPoint>
@@ -90,23 +72,20 @@
     <Resources>
       <!-- ! edit these on production -->
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/assets/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/assets/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/assets/logo_16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/assets/logo_32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/logo_80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
         <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="GroupLabel" DefaultValue="Contoso Add-in"/>
-        <bt:String id="TaskpaneButton.Label" DefaultValue="Show Taskpane"/>
-        <bt:String id="ActionButton.Label" DefaultValue="Perform an action"/>
-        <bt:String id="simpleButton.Label" DefaultValue="Simple Button"/>
+        <bt:String id="GroupLabel" DefaultValue="Quire"/>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="Quire"/>
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Opens a pane displaying all available properties."/>
-        <bt:String id="ActionButton.Tooltip" DefaultValue="Perform an action when clicked."/>
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Quire"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>

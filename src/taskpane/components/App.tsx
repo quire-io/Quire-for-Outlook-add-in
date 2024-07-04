@@ -1,48 +1,62 @@
 import * as React from "react";
-import Header from "./Header";
-import HeroList, { HeroListItem } from "./HeroList";
-import { Button, makeStyles } from "@fluentui/react-components";
-import { Ribbon24Regular, LockOpen24Regular, DesignIdeas24Regular } from "@fluentui/react-icons";
-import { login } from "../taskpane";
-
-interface AppProps {
-  title: string;
-}
+import { makeStyles } from "@fluentui/react-components";
+import { attemptAutoLogin, print, quireAuthentication } from "../../quireService";
+import { Image } from "@fluentui/react-components";
+import LoginView from "../pages/loginView";
 
 const useStyles = makeStyles({
   root: {
     minHeight: "100vh",
   },
+  loading__view: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100vh",
+  }
 });
 
-const App: React.FC<AppProps> = (props: AppProps) => {
-  const styles = useStyles();
-  // The list items are static and won't change at runtime,
-  // so this should be an ordinary const, not a part of state.
-  const listItems: HeroListItem[] = [
-    {
-      icon: <Ribbon24Regular />,
-      primaryText: "Achieve more with Office integration",
-    },
-    {
-      icon: <LockOpen24Regular />,
-      primaryText: "Unlock features and functionality",
-    },
-    {
-      icon: <DesignIdeas24Regular />,
-      primaryText: "Create and visualize like a pro",
-    },
-  ];
+enum AppView {
+  login, main, loading
+}
 
-  async function onClickLogin() {
-    const token = await login();
-  };
+const App: React.FC = () => {
+  const styles = useStyles();
+  const [currentView, setView] = React.useState<AppView>(AppView.loading);
+
+  React.useEffect(() => {
+    Office.onReady(async () => {
+      const isLoggedin = await attemptAutoLogin();
+      setTimeout(() => setView(isLoggedin ? AppView.main : AppView.login), 1000);
+    });
+  })
+
+  async function onLogIn() {
+    if (await quireAuthentication())
+      setView(AppView.main);
+    else { //TODO: pop error message
+      setView(AppView.login);
+      console.error("Failed to login");
+    }
+  }
+
+  function _getView(view: AppView): JSX.Element {
+    switch (view) {
+      case AppView.login:
+        return <LoginView onLogIn={onLogIn}/>;
+      case AppView.loading:
+        return (
+          <section className={styles.loading__view}>
+            <Image src="assets/loading.png" alt="Loading" title="Loading" />
+          </section>);
+      default:
+        return <div>Not implemented</div>;
+    }
+  }
 
   return (
     <div className={styles.root}>
-      <Header logo="assets/logo-filled.png" title={props.title} message="Welcome" />
-      <HeroList message="Discover what this add-in can do for you today!" items={listItems} />
-      <Button onClick={onClickLogin}>Run</Button>
+      {_getView(currentView)}
     </div>
   );
 };
