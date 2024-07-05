@@ -1,9 +1,10 @@
 import * as React from 'react';
 import * as m from '../../constants';
-import { Dropdown, OptionOnSelectData, Option, makeStyles, SelectionEvents, Label, Input, Textarea, Checkbox, mergeClasses, Button } from '@fluentui/react-components';
-import { getProjects, inboxProject, print, Project } from '../../quireService';
+import { Dropdown, OptionOnSelectData, Option, makeStyles, SelectionEvents, Label, Input, Textarea, Checkbox, mergeClasses, Button, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem } from '@fluentui/react-components';
+import { loadProjects, inboxProject, print, Project } from '../../quireService';
 import { DatePicker } from '@fluentui/react-datepicker-compat';
-import { QuirePrimaryButton } from '../components/QuireComponent';
+import { LoadingView } from '../components/App';
+import { QuestionCircleRegular, Settings20Regular, SignOutRegular } from '@fluentui/react-icons';
 
 const useStyle = makeStyles({
   task__view: {
@@ -35,20 +36,78 @@ const useStyle = makeStyles({
   task__view__button: {
     padding: "6px 12px",
     minWidth: "unset",
+  },
+  setting__button: {
+    position: "absolute",
+    right: "20px",
+    bottom: "16px",
+    '&:hover': {
+      cursor: "pointer",
+      color: "#424242",
+    }
+  },
+  option__icon: {
+    color: "#424242 !important",
   }
 });
 
-const TaskView: React.FC = () => {
-  const [view, setView] = React.useState<'create' | 'done'>('create');
+const TaskView: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
+  const [view, setView] = React.useState<'create' | 'done' | 'loading'>('loading');
+  const descriptionRef = React.useRef<String>("");
+  const projectsRef = React.useRef<Project[]>([]);
+  const settingButton = <SettingButton onLogout={onLogout} />;
 
-  function getView(type: 'create' | 'done') {
+  function getView(type: 'create' | 'done' | 'loading') {
     switch (type) {
       case 'create':
-        return <_CreateView onDone={() => setView('done')} onCancel={() => setView('create')}/>;
+        return (
+          <>
+            <CreateView
+              onDone={() => setView('done')}
+              onCancel={() => Office.context.ui.closeContainer()}
+              projects={projectsRef.current}
+              description={descriptionRef.current} />
+            {settingButton}
+          </>);
       case 'done':
-        return <_DoneView />;
+        return (
+          <>
+            <DoneView />
+            {settingButton}
+          </>);
+      case 'loading':
+        return <LoadingView />;
     }
   }
+
+  async function getDescription() {
+    return new Promise<String>((resolve, reject) => {
+      Office.context.mailbox.item.body.getAsync("text", (result) => {
+        if (result.status === Office.AsyncResultStatus.Succeeded) {
+          descriptionRef.current = result.value;
+          resolve(result.value);
+        }
+        else
+          reject(result.error);
+      });
+    });
+  }
+
+  async function getProjects() {
+    return new Promise<Project[]>((resolve, reject) => {
+      loadProjects().then((projects) => {
+        projectsRef.current = projects;
+        resolve(projects);
+      }).catch((error) => reject(error));
+    });
+  }
+
+
+  React.useEffect(() => {
+    Promise.all([getProjects(), getDescription()])
+      .then(() => setView('create'))
+      .catch((error) => console.error(error));
+  }, []);
 
   return getView(view);
 }
@@ -56,17 +115,19 @@ const TaskView: React.FC = () => {
 interface CreateTaskProps {
   onDone: () => void;
   onCancel: () => void;
+  description: String;
+  projects: Project[];
 }
 
-const _CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
+const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
   const style = useStyle();
-  const [project, setProjectOid] = React.useState<String>(inboxProject.oid);
+  const projectOid = React.useRef<String>(inboxProject.oid);
   const [taskName, setTaskName] = React.useState<String>(`Re: ${Office.context.mailbox.item.subject}`);
-  const [dueDate, setDueDate] = React.useState<Date>(new Date());
+  const dueDate = React.useRef<Date>(new Date());
   const [assignees, setAssignees] = React.useState<String>("");
   const [tags, setTags] = React.useState<String>("");
-  const [description, setDescription] = React.useState<String>("");
-  const [savePlainText, toggleSavePlainText] = React.useState<Boolean>(false);
+  const [description, setDescription] = React.useState<String>(prop.description);
+  const asPlainText = React.useRef<Boolean>(false);
 
   const labelClasses = mergeClasses(style.task__view__label, style.task__view__full__row);
 
@@ -96,10 +157,20 @@ const _CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
           value={description.toString()}
           onChange={(_, data) => setDescription(data.value)}
           className={style.task__view__full__row} />
-        <Checkbox 
+        <Checkbox
+          value={asPlainText.current.toString()}
           label={m.M_FORMCOLUMN_DESCRIPTION_OPTION}
-          onChange={(_, data) => toggleSavePlainText(data.checked as boolean)}/>
+          onChange={(_, data) => asPlainText.current = data.checked as Boolean} />
       </section>
+    );
+  }
+
+  function buttonBuilder(options: { appearance: 'primary' | 'outline', onClick: () => void, content: String }) {
+    return (
+      <Button
+        appearance={options.appearance}
+        className={style.task__view__button}
+        onClick={options.onClick}>{options.content}</Button>
     );
   }
 
@@ -111,18 +182,19 @@ const _CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
 
   return (
     <div className={style.task__view}>
-      {wrapContent(m.M_FORMCOLUMN_PROJECT, <ProjectSelectionDropdown onSelected={setProjectOid}/>)}
+      {wrapContent(m.M_FORMCOLUMN_PROJECT,
+        <ProjectSelectionDropdown projects={prop.projects} onSelected={(oid) => projectOid.current = oid} />)}
       {wrapContent(m.M_FORMCOLUMN_TASK, inputBuilder(taskName, setTaskName))}
-      {wrapContent(m.M_FORMCOLUMN_DUE, 
+      {wrapContent(m.M_FORMCOLUMN_DUE,
         <DatePicker
-          onSelectDate={setDueDate}
-          className={style.task__view__full__row}/>)}
+          onSelectDate={(date) => dueDate.current = date}
+          className={style.task__view__full__row} />)}
       {wrapContent(m.M_FORMCOLUMN_ASSIGNEES, inputBuilder(assignees, setAssignees), m.M_FORMCOLUMN_ASSIGNEES_DESCRIPTION)}
       {wrapContent(m.M_FORMCOLUMN_TAGS, inputBuilder(tags, setTags), m.M_FORMCOLUMN_TAGS_DESCRIPTION)}
       {descriptionBuilder()}
       <section className={style.task__view__button__group}>
-        <QuirePrimaryButton className={style.task__view__button} content={m.M_BUTTON_CREATE} onClick={onCreate} />
-        <Button className={style.task__view__button} content={m.M_BUTTON_CANCEL} onClick={prop.onCancel}>{m.M_BUTTON_CANCEL}</Button>
+        {buttonBuilder({ appearance: 'primary', onClick: onCreate, content: m.M_BUTTON_CREATE })}
+        {buttonBuilder({ appearance: 'outline', onClick: prop.onCancel, content: m.M_BUTTON_CANCEL })}
       </section>
     </div>
   );
@@ -130,17 +202,16 @@ const _CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
 
 interface ActionableComponentProps<T> {
   onSelected?: (selected: T) => void;
+  projects: Project[];
 }
 
 const ProjectSelectionDropdown: React.FC<ActionableComponentProps<String>> = (prop: ActionableComponentProps<String>) => {
-  const [projectsList, setProjectsList] = React.useState<Project[]>([inboxProject]);
-
   function onOptionSelect(_: SelectionEvents, data: OptionOnSelectData) {
     prop.onSelected?.(data.optionValue);
   }
 
   function createProjectOptions() {
-    return projectsList.map((project) => {
+    return prop.projects.map((project) => {
       return <Option
         style={{ overflow: "clip" }}
         value={project.oid}>
@@ -149,15 +220,9 @@ const ProjectSelectionDropdown: React.FC<ActionableComponentProps<String>> = (pr
     });
   };
 
-  React.useEffect(() => {
-    prop.onSelected?.(inboxProject.oid);
-
-    getProjects().then((projects) => setProjectsList(projects));
-  }, []);
-
   return (
-    <Dropdown 
-      style={{width: "100%"}}
+    <Dropdown
+      style={{ width: "100%" }}
       defaultValue={inboxProject.name}
       defaultSelectedOptions={[inboxProject.oid]}
       appearance='outline'
@@ -167,18 +232,41 @@ const ProjectSelectionDropdown: React.FC<ActionableComponentProps<String>> = (pr
   )
 };
 
-const _DoneView: React.FC = () => {
+const DoneView: React.FC = () => {
   const style = useStyle();
 
   return (
     <section className={style.task__view}>
       <Label>{m.M_DONE_MESSAGE}</Label>
-      <QuirePrimaryButton 
+      <Button
         className={style.task__view__button} style={{ marginTop: "16px" }}
-        content={m.M_BUTTON_VIEW_DONE} onClick={() => print("VIEW on QUIRE")} />
+        onClick={() => print("VIEW on QUIRE")}>{m.M_BUTTON_VIEW_DONE}</Button>
       <Button className={style.task__view__button} onClick={() => print("CREATE ANOTHER TASK")}>{m.M_BUTTON_VIEW_CREATE}</Button>
     </section>
   );
 }
+
+const SettingButton: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
+  const style = useStyle();
+
+  function onHelp() {
+    //TODO: link to guide/blog if we have one
+  }
+
+  return (
+    <Menu>
+      <MenuTrigger>
+        <Settings20Regular className={style.setting__button} />
+      </MenuTrigger>
+
+      <MenuPopover>
+        <MenuList>
+          <MenuItem icon={<QuestionCircleRegular className={style.option__icon} />}>{m.M_SETTING_HELP}</MenuItem>
+          <MenuItem icon={<SignOutRegular className={style.option__icon} />} onClick={onLogout}>{m.M_SETTING_LOGOUT}</MenuItem>
+        </MenuList>
+      </MenuPopover>
+    </Menu>
+  );
+};
 
 export default TaskView;

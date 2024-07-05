@@ -93,7 +93,7 @@ export async function quireApi(option: QuireApiOption) {
   })
 }
 
-export async function getProjects() {
+export async function loadProjects() {
   return await new Promise<Project[]>((resolve, reject) => {
     quireApi({
       url: api_getProjects,

@@ -41,17 +41,19 @@ const App: React.FC = () => {
     }
   }
 
+  function onLogout() {
+    localStorage.clear();
+    setView(AppView.login);
+  }
+
   function getView(view: AppView): JSX.Element {
     switch (view) {
       case AppView.login:
         return <LoginView onLogIn={onLogIn}/>;
       case AppView.loading:
-        return (
-          <section className={styles.loading__view}>
-            <Image src="assets/loading.png" alt="Loading" title="Loading" />
-          </section>);
+        return <LoadingView />;
       case AppView.task:
-        return <TaskView />;
+        return <TaskView onLogout={onLogout} />;
       default:
         return <div>Not implemented</div>;
     }
@@ -65,3 +67,11 @@ const App: React.FC = () => {
 };
 
 export default App;
+
+export const LoadingView: React.FC = () => {
+  const styles = useStyles();
+  return (
+    <section className={styles.loading__view}>
+      <Image src="assets/loading.png" alt="Loading" title="Loading" />
+    </section>);
+}
