@@ -4,6 +4,7 @@ import { Dropdown, OptionOnSelectData, Option, makeStyles, SelectionEvents, Labe
 import { loadProjects, inboxProject, Project, Task, createTask, VoidRun } from '../../quireService';
 import { DatePicker } from '@fluentui/react-datepicker-compat';
 import { showError, LoadingView, SettingButton } from '../components/components';
+import TurndownService from 'turndown';
 
 const useStyle = makeStyles({
   task__view: {
@@ -123,6 +124,8 @@ const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
 
   const labelClasses = mergeClasses(style.task__view__label, style.task__view__full__row);
 
+  const turndownService = new TurndownService();
+
   function wrapContent(title: string, content: React.ReactNode, description?: string) {
     const descriptionClass = mergeClasses(style.task__view__description, style.task__view__full__row);
     return (
@@ -175,13 +178,15 @@ const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
       return list;
     }
 
+    const desc = asPlainText.current ? 
+      turndownService.turndown(description) : description;
+
     const task = new Task(
       taskName as string,
       dueDate.current,
       getSplitValueList(assignees),
       getSplitValueList(tags),
-      description
-    );
+      desc);
 
     await createTask(task, projectOid.current)
       .then((taskUrl) => {
