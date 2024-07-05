@@ -1,10 +1,9 @@
 import * as React from 'react';
 import * as m from '../../constants';
-import { Dropdown, OptionOnSelectData, Option, makeStyles, SelectionEvents, Label, Input, Textarea, Checkbox, mergeClasses, Button, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem } from '@fluentui/react-components';
-import { loadProjects, inboxProject, print, Project } from '../../quireService';
+import { Dropdown, OptionOnSelectData, Option, makeStyles, SelectionEvents, Label, Input, Textarea, Checkbox, mergeClasses, Button } from '@fluentui/react-components';
+import { loadProjects, inboxProject, Project, Task, createTask, VoidRun } from '../../quireService';
 import { DatePicker } from '@fluentui/react-datepicker-compat';
-import { LoadingView } from '../components/App';
-import { QuestionCircleRegular, Settings20Regular, SignOutRegular } from '@fluentui/react-icons';
+import { showError, LoadingView, SettingButton } from '../components/components';
 
 const useStyle = makeStyles({
   task__view: {
@@ -37,25 +36,14 @@ const useStyle = makeStyles({
     padding: "6px 12px",
     minWidth: "unset",
   },
-  setting__button: {
-    position: "absolute",
-    right: "20px",
-    bottom: "16px",
-    '&:hover': {
-      cursor: "pointer",
-      color: "#424242",
-    }
-  },
-  option__icon: {
-    color: "#424242 !important",
-  }
 });
 
-const TaskView: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
+const TaskView: React.FC<{ onLogout?: VoidRun }> = ({ onLogout }) => {
   const [view, setView] = React.useState<'create' | 'done' | 'loading'>('loading');
-  const descriptionRef = React.useRef<String>("");
+  const descriptionRef = React.useRef<string>("");
   const projectsRef = React.useRef<Project[]>([]);
   const settingButton = <SettingButton onLogout={onLogout} />;
+  const taskUrlRef = React.useRef<string>("");
 
   function getView(type: 'create' | 'done' | 'loading') {
     switch (type) {
@@ -63,7 +51,10 @@ const TaskView: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
         return (
           <>
             <CreateView
-              onDone={() => setView('done')}
+              onDone={(url) => {
+                taskUrlRef.current = url;
+                setView('done');
+              }}
               onCancel={() => Office.context.ui.closeContainer()}
               projects={projectsRef.current}
               description={descriptionRef.current} />
@@ -72,7 +63,7 @@ const TaskView: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
       case 'done':
         return (
           <>
-            <DoneView />
+            <DoneView url={taskUrlRef.current} back={() => setView('create')} />
             {settingButton}
           </>);
       case 'loading':
@@ -81,7 +72,7 @@ const TaskView: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
   }
 
   async function getDescription() {
-    return new Promise<String>((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
       Office.context.mailbox.item.body.getAsync("text", (result) => {
         if (result.status === Office.AsyncResultStatus.Succeeded) {
           descriptionRef.current = result.value;
@@ -113,25 +104,26 @@ const TaskView: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
 }
 
 interface CreateTaskProps {
-  onDone: () => void;
-  onCancel: () => void;
-  description: String;
+  onDone: (url: string) => void;
+  onCancel: VoidRun;
+  description: string;
   projects: Project[];
 }
 
 const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
   const style = useStyle();
-  const projectOid = React.useRef<String>(inboxProject.oid);
-  const [taskName, setTaskName] = React.useState<String>(`Re: ${Office.context.mailbox.item.subject}`);
-  const dueDate = React.useRef<Date>(new Date());
-  const [assignees, setAssignees] = React.useState<String>("");
-  const [tags, setTags] = React.useState<String>("");
-  const [description, setDescription] = React.useState<String>(prop.description);
-  const asPlainText = React.useRef<Boolean>(false);
+  const projectOid = React.useRef<string>(inboxProject.id);
+  const [taskName, setTaskName] = React.useState<string>(`Re: ${Office.context.mailbox.item.subject}`);
+  const dueDate = React.useRef<Date | undefined>();
+  const [assignees, setAssignees] = React.useState<string>("");
+  const [tags, setTags] = React.useState<string>("");
+  const [description, setDescription] = React.useState<string>(prop.description);
+  const asPlainText = React.useRef<boolean>(false);
+  const [error, setError] = React.useState<string | undefined>();
 
   const labelClasses = mergeClasses(style.task__view__label, style.task__view__full__row);
 
-  function wrapContent(title: String, content: React.ReactNode, description?: String) {
+  function wrapContent(title: string, content: React.ReactNode, description?: string) {
     const descriptionClass = mergeClasses(style.task__view__description, style.task__view__full__row);
     return (
       <section className={style.taks__view__section}>
@@ -142,7 +134,7 @@ const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
     );
   }
 
-  function inputBuilder(value: String, setter: React.Dispatch<React.SetStateAction<String>>) {
+  function inputBuilder(value: string, setter: React.Dispatch<React.SetStateAction<string>>) {
     return (<Input
       value={value.toString()}
       onChange={(_, data) => setter(data.value)}
@@ -160,24 +152,48 @@ const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
         <Checkbox
           value={asPlainText.current.toString()}
           label={m.M_FORMCOLUMN_DESCRIPTION_OPTION}
-          onChange={(_, data) => asPlainText.current = data.checked as Boolean} />
+          onChange={(_, data) => asPlainText.current = data.checked as boolean} />
       </section>
     );
   }
 
-  function buttonBuilder(options: { appearance: 'primary' | 'outline', onClick: () => void, content: String }) {
+  function buttonBuilder(options: { appearance: 'primary' | 'outline', onClick: VoidRun, content: string, disabled?: boolean }) {
     return (
       <Button
+        disabled={options.disabled}
         appearance={options.appearance}
         className={style.task__view__button}
         onClick={options.onClick}>{options.content}</Button>
     );
   }
 
-  function onCreate() {
-    //TODO: validation
+  async function onCreate() {
+    function getSplitValueList(target: string): string[] | undefined {
+      if (target.trim() === "") return undefined;
+      const list = target.split(",").map((item) => item.trimStart().trimEnd());
+      if (list.length === 0) return undefined;
+      return list;
+    }
 
-    prop.onDone();
+    const task = new Task(
+      taskName as string,
+      dueDate.current,
+      getSplitValueList(assignees),
+      getSplitValueList(tags),
+      description
+    );
+
+    await createTask(task, projectOid.current)
+      .then((taskUrl) => {
+        setError(undefined);
+        prop.onDone(taskUrl);
+      })
+      .catch(setError);
+  }
+
+  function isCreatable(): boolean {
+    if (taskName.trim() === "") return false;
+    return true;
   }
 
   return (
@@ -193,9 +209,11 @@ const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
       {wrapContent(m.M_FORMCOLUMN_TAGS, inputBuilder(tags, setTags), m.M_FORMCOLUMN_TAGS_DESCRIPTION)}
       {descriptionBuilder()}
       <section className={style.task__view__button__group}>
-        {buttonBuilder({ appearance: 'primary', onClick: onCreate, content: m.M_BUTTON_CREATE })}
+        {buttonBuilder({ appearance: 'primary', onClick: onCreate, content: m.M_BUTTON_CREATE, disabled: !isCreatable()})}
         {buttonBuilder({ appearance: 'outline', onClick: prop.onCancel, content: m.M_BUTTON_CANCEL })}
       </section>
+
+      {error && showError(error)}
     </div>
   );
 }
@@ -205,7 +223,7 @@ interface ActionableComponentProps<T> {
   projects: Project[];
 }
 
-const ProjectSelectionDropdown: React.FC<ActionableComponentProps<String>> = (prop: ActionableComponentProps<String>) => {
+const ProjectSelectionDropdown: React.FC<ActionableComponentProps<string>> = (prop: ActionableComponentProps<string>) => {
   function onOptionSelect(_: SelectionEvents, data: OptionOnSelectData) {
     prop.onSelected?.(data.optionValue);
   }
@@ -214,7 +232,7 @@ const ProjectSelectionDropdown: React.FC<ActionableComponentProps<String>> = (pr
     return prop.projects.map((project) => {
       return <Option
         style={{ overflow: "clip" }}
-        value={project.oid}>
+        value={project.id}>
         {project.name}
       </Option>
     });
@@ -224,7 +242,7 @@ const ProjectSelectionDropdown: React.FC<ActionableComponentProps<String>> = (pr
     <Dropdown
       style={{ width: "100%" }}
       defaultValue={inboxProject.name}
-      defaultSelectedOptions={[inboxProject.oid]}
+      defaultSelectedOptions={[inboxProject.id]}
       appearance='outline'
       onOptionSelect={onOptionSelect}>
       {...createProjectOptions()}
@@ -232,41 +250,19 @@ const ProjectSelectionDropdown: React.FC<ActionableComponentProps<String>> = (pr
   )
 };
 
-const DoneView: React.FC = () => {
+const DoneView: React.FC<{ url: string, back: VoidRun }> = ({ url, back }) => {
   const style = useStyle();
 
   return (
     <section className={style.task__view}>
       <Label>{m.M_DONE_MESSAGE}</Label>
       <Button
+        appearance="primary"
         className={style.task__view__button} style={{ marginTop: "16px" }}
-        onClick={() => print("VIEW on QUIRE")}>{m.M_BUTTON_VIEW_DONE}</Button>
-      <Button className={style.task__view__button} onClick={() => print("CREATE ANOTHER TASK")}>{m.M_BUTTON_VIEW_CREATE}</Button>
+        onClick={() => window.open(url, "_blank")}>{m.M_BUTTON_VIEW_DONE}</Button>
+      <Button className={style.task__view__button} onClick={back}>{m.M_BUTTON_VIEW_CREATE}</Button>
     </section>
   );
 }
-
-const SettingButton: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
-  const style = useStyle();
-
-  function onHelp() {
-    //TODO: link to guide/blog if we have one
-  }
-
-  return (
-    <Menu>
-      <MenuTrigger>
-        <Settings20Regular className={style.setting__button} />
-      </MenuTrigger>
-
-      <MenuPopover>
-        <MenuList>
-          <MenuItem icon={<QuestionCircleRegular className={style.option__icon} />}>{m.M_SETTING_HELP}</MenuItem>
-          <MenuItem icon={<SignOutRegular className={style.option__icon} />} onClick={onLogout}>{m.M_SETTING_LOGOUT}</MenuItem>
-        </MenuList>
-      </MenuPopover>
-    </Menu>
-  );
-};
 
 export default TaskView;
