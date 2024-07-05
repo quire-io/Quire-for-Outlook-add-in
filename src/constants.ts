@@ -38,6 +38,7 @@ export const AUTH_URL = `${HOST_URL}/oauth?client_id=${CLIENT_ID}&redirect_uri=$
 // keys
 export const KEY_TOKEN = "token";
 export const KEY_REFRESH = "refresh_token";
+export const KEY_CURUSER = "current_user";
 
 //styles
 export const COLOR_PRIMARY = "#05843E";

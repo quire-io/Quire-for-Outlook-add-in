@@ -1,4 +1,4 @@
-import { AUTH_URL, KEY_TOKEN, KEY_REFRESH, CLIENT_ID, CLIENT_SECRET, QUIRE_URL, M_ERROR_NO_PROJECT, M_ERROR_NO_AUTH } from './constants';
+import { AUTH_URL, KEY_TOKEN, KEY_REFRESH, CLIENT_ID, CLIENT_SECRET, QUIRE_URL, M_ERROR_NO_PROJECT, M_ERROR_NO_AUTH, KEY_CURUSER } from './constants';
 
 export function print(msg: any) {//would remove this cheat later
   console.log(msg);
@@ -7,7 +7,7 @@ export function print(msg: any) {//would remove this cheat later
 export async function quireAuthentication() {
   let dialog: Office.Dialog;
 
-  return new Promise<boolean>((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     Office.context.ui.displayDialogAsync(AUTH_URL, {
       height: 70, //percentage
       width: 70,
@@ -25,7 +25,7 @@ export async function quireAuthentication() {
       const code = arg.message;
       if (code !== '')
         getToken("auth", code)
-          .then(() => resolve(true))
+          .then(() => resolve())
           .catch(() => reject(M_ERROR_NO_AUTH));
       else
         reject(M_ERROR_NO_AUTH);
@@ -50,6 +50,7 @@ async function getToken(type: "auth" | "refresh", data: string) {
   
         localStorage.setItem(KEY_TOKEN, token);
         localStorage.setItem(KEY_REFRESH, refresh_token);
+        getCurrentUser();
         resolve();
       }
     });
@@ -109,6 +110,7 @@ interface QuireApiOption {
 
 const api_getProjects = "/api/project/list";
 const api_createTask = (oid: string) => `/api/task/id/${oid}`;
+const api_getCurrentUser = "/api/user/id/me";
 
 export async function quireApi(option: QuireApiOption) {
   const token = localStorage.getItem(KEY_TOKEN);
@@ -120,6 +122,23 @@ export async function quireApi(option: QuireApiOption) {
     data: option.data,
     success: option.onSuccess,
     error: option.onError,
+  })
+}
+
+export async function getCurrentUser() {
+  return await new Promise<string>((resolve, reject) => {
+    quireApi({
+      url: api_getCurrentUser,
+      method: 'get',
+      onSuccess: (user) => {
+        localStorage.setItem(KEY_CURUSER, user.oid)
+        resolve(user.oid);
+      },
+      onError: (error) => {
+        console.error(error);
+        reject();
+      }
+    });
   })
 }
 
@@ -149,6 +168,9 @@ export async function loadProjects() {
 };
 
 export async function createTask(task: Task, projectOid: string) {
+  // only set follwers if getCurrentUser is successful
+  const currentUser = localStorage.getItem(KEY_CURUSER);
+
   return await new Promise<string>((resolve, reject) => {
     quireApi({
       url: api_createTask(projectOid),
@@ -159,6 +181,7 @@ export async function createTask(task: Task, projectOid: string) {
         assignees: task.assignees,
         tags: task.tags,
         description: task.description,
+        followers: currentUser && [currentUser]
       }),
       onSuccess(response) {
         if (response.url)
