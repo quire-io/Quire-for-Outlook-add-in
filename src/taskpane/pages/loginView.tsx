@@ -1,6 +1,8 @@
 import * as React from "react";
 import { makeStyles, Image, Button } from "@fluentui/react-components";
 import { M_LOGIN_BUTTON, M_LOGIN_DESCRIPTION, M_LOGIN_TITLE } from "../../constants";
+import { VoidRun } from "../../quireService";
+import { showError } from "../components/components";
 
 const useStyles = makeStyles({
   login__view: {
@@ -11,11 +13,7 @@ const useStyles = makeStyles({
   },
 });
 
-interface LoginViewProps {
-  onLogIn?: () => void;
-}
-
-const LoginView: React.FC<LoginViewProps> = (prop: LoginViewProps) => {
+const LoginView: React.FC<{ onLogin: VoidRun, error: string }> = ({ onLogin, error }) => {
 
   const styles = useStyles();
 
@@ -26,7 +24,8 @@ const LoginView: React.FC<LoginViewProps> = (prop: LoginViewProps) => {
       <span>{M_LOGIN_DESCRIPTION}</span>
       <Button style={{ marginTop: "16px" }}
         appearance="primary"
-        onClick={prop.onLogIn}>{M_LOGIN_BUTTON}</Button>
+        onClick={onLogin}>{M_LOGIN_BUTTON}</Button>
+      {error && showError(error)}
     </section>
   )
 };

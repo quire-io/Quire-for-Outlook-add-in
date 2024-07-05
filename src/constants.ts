@@ -24,6 +24,9 @@ export const M_DONE_MESSAGE = "Your new task has been added to Quire.";
 export const M_SETTING_HELP = "Help";
 export const M_SETTING_LOGOUT = "Log out";
 
+export const M_ERROR_NO_PROJECT = "Failed to fetch projects.";
+export const M_ERROR_NO_AUTH = "Failed to authenticate with Quire.";
+
 // urls
 export const CLIENT_ID = process.env.CLIENT_ID;
 export const CLIENT_SECRET = process.env.CLIENT_SECRET;

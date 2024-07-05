@@ -1,4 +1,4 @@
-import { AUTH_URL, KEY_TOKEN, KEY_REFRESH, CLIENT_ID, CLIENT_SECRET, QUIRE_URL } from './constants';
+import { AUTH_URL, KEY_TOKEN, KEY_REFRESH, CLIENT_ID, CLIENT_SECRET, QUIRE_URL, M_ERROR_NO_PROJECT, M_ERROR_NO_AUTH } from './constants';
 
 export function print(msg: any) {//would remove this cheat later
   console.log(msg);
@@ -23,71 +23,101 @@ export async function quireAuthentication() {
       dialog.close();
 
       const code = arg.message;
-
       if (code !== '')
-        resolve(_getToken("auth", code));
+        getToken("auth", code)
+          .then(() => resolve(true))
+          .catch(() => reject(M_ERROR_NO_AUTH));
       else
-        reject("Failed to authenticate.");
+        reject(M_ERROR_NO_AUTH);
     }
   });
 }
 
-async function _getToken(type: "auth" | "refresh", data: String) {
-  return await $.post(`${QUIRE_URL}/oauth/token`, {
-    "grant_type": type === "auth" ? "authorization_code" : "refresh_token",
-    "client_id": CLIENT_ID,
-    "client_secret": CLIENT_SECRET,
-    "code": data,
-    "refresh_token": data,
-  }, function (response) {
-    if (response.error)
-      return false;
-    else {
-      const token = response.access_token;
-      const refresh_token = response.refresh_token;
-
-      localStorage.setItem(KEY_TOKEN, token);
-      localStorage.setItem(KEY_REFRESH, refresh_token);
-      return true;
-    }
+async function getToken(type: "auth" | "refresh", data: string) {
+  return new Promise<void>((resolve, reject) => {
+    $.post(`${QUIRE_URL}/oauth/token`, {
+      "grant_type": type === "auth" ? "authorization_code" : "refresh_token",
+      "client_id": CLIENT_ID,
+      "client_secret": CLIENT_SECRET,
+      "code": data,
+      "refresh_token": data,
+    }, function (response) {
+      if (response.error)
+        reject(M_ERROR_NO_AUTH);
+      else {
+        const token = response.access_token;
+        const refresh_token = response.refresh_token;
+  
+        localStorage.setItem(KEY_TOKEN, token);
+        localStorage.setItem(KEY_REFRESH, refresh_token);
+        resolve();
+      }
+    });
   });
 }
 
-export async function attemptAutoLogin(): Promise<boolean> {
+export async function attemptAutoLogin(): Promise<void> {
   const refresh_token = localStorage.getItem(KEY_REFRESH);
   if (!refresh_token)
-    return false;
+    return Promise.reject(M_ERROR_NO_AUTH);
 
-  return await _getToken("refresh", refresh_token);
+  return await getToken("refresh", refresh_token)
 }
 
 export class Project {
-  oid: string;
+  id: string;
   name: string;
-  constructor(oid: string, name: string) {
-    this.oid = oid;
+  constructor(id: string, name: string) {
+    this.id = id;
     this.name = name;
+  }
+}
+
+function toQuireDate(date: Date | undefined) {
+  if (!date)
+    return undefined;
+  return new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate())).toISOString();
+}
+
+export class Task {
+  name: string;
+  due: string | undefined;
+  assignees: string[] | undefined;
+  tags: string[] | undefined;
+  description: string;
+  constructor(name: string, due: Date | undefined, assignees: string[], tags: string[], description: string) {
+    this.name = name;
+    this.due = toQuireDate(due);
+    this.assignees = assignees;
+    this.tags = tags;
+    this.description = description;
   }
 }
 
 export const inboxProject = new Project("-", "Inbox");
 
+export type VoidRun = () => void;
+
 interface QuireApiOption {
   url: string;
   method: 'post' | 'get';
   data?: any;
+  contentType?: string;
   onSuccess?: (response: any) => void;
   onError?: (error: any) => void;
 }
 
 const api_getProjects = "/api/project/list";
+const api_createTask = (oid: string) => `/api/task/id/${oid}`;
 
 export async function quireApi(option: QuireApiOption) {
   const token = localStorage.getItem(KEY_TOKEN);
   $.ajax({
     url: `${QUIRE_URL}${option.url}`,
     method: option.method,
-    headers: {"Authorization": `Bearer ${token}`},
+    headers: {
+      "Authorization": `Bearer ${token}`},
+    data: option.data,
     success: option.onSuccess,
     error: option.onError,
   })
@@ -102,18 +132,44 @@ export async function loadProjects() {
         if (projects instanceof Array) {
           const list = [
             inboxProject,
-            ...projects.map((project: any) => new Project(project.oid, project.name))
+            ...projects.map((project: any) => new Project(project.id, project.name))
                 .sort((a: Project, b: Project) => a.name.localeCompare(b.name))
           ]
           resolve(list);
         }
         else
-          reject("Failed to fetch projects.");
+          reject(M_ERROR_NO_PROJECT);
       },
       onError: (error) => {
         console.error(error);
-        reject(error);
+        reject(M_ERROR_NO_PROJECT);
       }
     });
   })
 };
+
+export async function createTask(task: Task, projectOid: string) {
+  return await new Promise<string>((resolve, reject) => {
+    quireApi({
+      url: api_createTask(projectOid),
+      method: 'post',
+      data: JSON.stringify({
+        name: task.name,
+        due: task.due,
+        assignees: task.assignees,
+        tags: task.tags,
+        description: task.description,
+      }),
+      onSuccess(response) {
+        if (response.url)
+          resolve(response.url);
+        else
+          reject("Failed to create task.");
+      },
+      onError(error) {
+        const message = error.responseJSON.message;
+        reject(message);
+      }
+    });
+  })
+}
