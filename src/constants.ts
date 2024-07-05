@@ -21,6 +21,9 @@ export const M_BUTTON_VIEW_DONE = "View on Quire";
 export const M_BUTTON_VIEW_CREATE = "Add another task";
 export const M_DONE_MESSAGE = "Your new task has been added to Quire.";
 
+export const M_SETTING_HELP = "Help";
+export const M_SETTING_LOGOUT = "Log out";
+
 // urls
 export const CLIENT_ID = process.env.CLIENT_ID;
 export const CLIENT_SECRET = process.env.CLIENT_SECRET;

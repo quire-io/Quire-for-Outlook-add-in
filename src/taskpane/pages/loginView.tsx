@@ -1,7 +1,6 @@
 import * as React from "react";
-import { makeStyles, Image } from "@fluentui/react-components";
+import { makeStyles, Image, Button } from "@fluentui/react-components";
 import { M_LOGIN_BUTTON, M_LOGIN_DESCRIPTION, M_LOGIN_TITLE } from "../../constants";
-import { QuirePrimaryButton } from "../components/QuireComponent";
 
 const useStyles = makeStyles({
   login__view: {
@@ -22,13 +21,14 @@ const LoginView: React.FC<LoginViewProps> = (prop: LoginViewProps) => {
 
   return (
     <section className={styles.login__view}>
-      <Image width="100%" height="auto" src="assets/welcome_start.png" title="welcome_view"/>
+      <Image width="100%" height="auto" src="assets/welcome_start.png" title="welcome_view" />
       <span>{M_LOGIN_TITLE}</span>
       <span>{M_LOGIN_DESCRIPTION}</span>
-      <QuirePrimaryButton style={{ marginTop: "16px" }}
-        content={M_LOGIN_BUTTON} onClick={prop.onLogIn}/>
+      <Button style={{ marginTop: "16px" }}
+        appearance="primary"
+        onClick={prop.onLogIn}>{M_LOGIN_BUTTON}</Button>
     </section>
-  ) 
+  )
 };
 
 export default LoginView;
