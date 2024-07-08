@@ -7,7 +7,7 @@ const webpack = require("webpack");
 const Dotenv = require("dotenv-webpack");
 
 const urlDev = "https://localhost:3000/";
-const urlProd = "https://quire.io/";
+const urlProd = "https://ms-outlook.quire.io/";
 
 async function getHttpsOptions() {
   const httpsOptions = await devCerts.getHttpsServerOptions();

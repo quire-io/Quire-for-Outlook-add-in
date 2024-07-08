@@ -31,7 +31,7 @@ export const M_ERROR_NO_AUTH = "Failed to authenticate with Quire.";
 export const CLIENT_ID = process.env.CLIENT_ID;
 export const CLIENT_SECRET = process.env.CLIENT_SECRET;
 export const HOST_URL = process.env.HOST_URL;
-export const REDIRECT_URI = process.env.REDIRECT_URI;
+export const REDIRECT_URI = `${HOST_URL}/callback.html`;
 export const QUIRE_URL = process.env.QUIRE_URL;
 export const AUTH_URL = `${HOST_URL}/oauth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
 
