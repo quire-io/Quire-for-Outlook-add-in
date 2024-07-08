@@ -7,7 +7,7 @@ const webpack = require("webpack");
 const Dotenv = require("dotenv-webpack");
 
 const urlDev = "https://localhost:3000/";
-const urlProd = "https://quire.io/";
+const urlProd = "https://add-in-hosting-cdn-url/";
 
 async function getHttpsOptions() {
   const httpsOptions = await devCerts.getHttpsServerOptions();

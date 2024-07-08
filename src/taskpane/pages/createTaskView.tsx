@@ -36,6 +36,7 @@ const useStyle = makeStyles({
   task__view__button: {
     padding: "6px 12px",
     minWidth: "unset",
+    width: "fit-content",
   },
 });
 
