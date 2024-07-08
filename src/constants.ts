@@ -33,7 +33,7 @@ export const CLIENT_SECRET = process.env.CLIENT_SECRET;
 export const HOST_URL = process.env.HOST_URL;
 export const REDIRECT_URI = `${HOST_URL}/callback.html`;
 export const QUIRE_URL = process.env.QUIRE_URL;
-export const AUTH_URL = `${HOST_URL}/oauth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
+export const AUTH_URL = `${QUIRE_URL}/oauth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
 
 // keys
 export const KEY_TOKEN = "token";
@@ -42,4 +42,4 @@ export const KEY_CURUSER = "current_user";
 
 //styles
 export const COLOR_PRIMARY = "#05843E";
-export const COLOR_SECONDARY = "#4AA433";
+// export const COLOR_SECONDARY = "#4AA433";
