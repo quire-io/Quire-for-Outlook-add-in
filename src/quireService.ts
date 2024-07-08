@@ -13,7 +13,7 @@ export async function quireAuthentication() {
       width: 70,
     }, function (asyncResult) {
         if (asyncResult.status !== Office.AsyncResultStatus.Succeeded)
-          reject(asyncResult.error);
+          reject(asyncResult.error.message.toString() ?? M_ERROR_NO_AUTH);
         dialog = asyncResult.value;
         dialog.addEventHandler(Office.EventType.DialogMessageReceived, processMessage);
       }

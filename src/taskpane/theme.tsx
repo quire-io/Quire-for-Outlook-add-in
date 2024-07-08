@@ -1,4 +1,5 @@
 import { BrandVariants, Theme, createLightTheme } from "@fluentui/react-components";
+import { COLOR_PRIMARY } from "../constants";
 
 //https://react.fluentui.dev/?path=/docs/theme-theme-designer--page
 //generate from #05843E
@@ -10,7 +11,7 @@ const quireTheme: BrandVariants = {
   50: "#154B26",
   60: "#145A2C",
   70: "#126933",
-  80: "#05843E", //was #0C7939, changed to #05843E for button color
+  80: COLOR_PRIMARY, //was #0C7939, changed to #05843E for button color
   90: "#198843",
   100: "#3D9556",
   110: "#58A26A",
