@@ -1,7 +1,6 @@
 
 // messages
-// TODO: replace messages
-export const M_LOGIN_TITLE = "The Quire brown fox jumps over the lazy dog.";
+export const M_LOGIN_TITLE = "Never miss a deadline by turning your emails into actionable tasks with Quire for Outlook.";
 export const M_LOGIN_DESCRIPTION = "In order to create new tasks, we will need access to your Quire account.";
 export const M_LOGIN_BUTTON = "Login with Quire";
 
@@ -9,9 +8,9 @@ export const M_FORMCOLUMN_PROJECT = "Project";
 export const M_FORMCOLUMN_TASK = "Task name";
 export const M_FORMCOLUMN_DUE = "Due date";
 export const M_FORMCOLUMN_ASSIGNEES = "Assignees";
-export const M_FORMCOLUMN_ASSIGNEES_DESCRIPTION = "Add assignee by typing in users’ ID or users’ email addresses. User comma to separate between assignees.";
+export const M_FORMCOLUMN_ASSIGNEES_DESCRIPTION = "Add assignee by typing in users’ ID or users’ email addresses. Use comma to separate assignees.";
 export const M_FORMCOLUMN_TAGS = "Tags";
-export const M_FORMCOLUMN_TAGS_DESCRIPTION = "Add tags to this task by typing in the existing tags. Use comma to separate between tags.";
+export const M_FORMCOLUMN_TAGS_DESCRIPTION = "Add tags to this task by typing in the existing tags. Use comma to separate tags.";
 export const M_FORMCOLUMN_DESCRIPTION = "Description";
 export const M_FORMCOLUMN_DESCRIPTION_OPTION = "Plain text";
 
@@ -26,6 +25,9 @@ export const M_SETTING_LOGOUT = "Log out";
 
 export const M_ERROR_NO_PROJECT = "Failed to fetch projects.";
 export const M_ERROR_NO_AUTH = "Failed to authenticate with Quire.";
+export const M_ERROR_TOKEN_EXPIRED = "Token expired. Please log in again.";
+export const M_ERROR_NO_AVAILABLE = "No available projects in current organization. Please create a project in Quire first.";
+export const M_ERROR_NO_PERMISSION = "You do not have permission to create task in this project.";
 
 // urls
 export const CLIENT_ID = process.env.CLIENT_ID;
@@ -34,6 +36,7 @@ export const HOST_URL = process.env.HOST_URL;
 export const REDIRECT_URI = `${HOST_URL}/callback.html`;
 export const QUIRE_URL = process.env.QUIRE_URL;
 export const AUTH_URL = `${QUIRE_URL}/oauth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
+export const HELP_URL = "https://quire.io/apps/outlook-add-in";
 
 // keys
 export const KEY_TOKEN = "token";

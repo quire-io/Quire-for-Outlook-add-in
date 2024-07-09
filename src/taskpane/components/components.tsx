@@ -30,7 +30,7 @@ export const SettingButton: React.FC<{ onLogout?: VoidRun }> = ({ onLogout }) =>
   const style = useStyle();
 
   function onHelp() {
-    //TODO: link to guide/blog if we have one
+    window.open(m.HELP_URL, "_blank");
   }
 
   return (
@@ -41,7 +41,7 @@ export const SettingButton: React.FC<{ onLogout?: VoidRun }> = ({ onLogout }) =>
 
       <MenuPopover>
         <MenuList>
-          <MenuItem icon={<QuestionCircleRegular className={style.option__icon} />}>{m.M_SETTING_HELP}</MenuItem>
+          <MenuItem icon={<QuestionCircleRegular className={style.option__icon} />} onClick={onHelp}>{m.M_SETTING_HELP}</MenuItem>
           <MenuItem icon={<SignOutRegular className={style.option__icon} />} onClick={onLogout}>{m.M_SETTING_LOGOUT}</MenuItem>
         </MenuList>
       </MenuPopover>

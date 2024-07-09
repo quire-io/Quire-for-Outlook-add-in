@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as m from '../../constants';
 import { Dropdown, OptionOnSelectData, Option, makeStyles, SelectionEvents, Label, Input, Textarea, Checkbox, mergeClasses, Button } from '@fluentui/react-components';
-import { loadProjects, inboxProject, Project, Task, createTask, VoidRun } from '../../quireService';
+import { loadProjects, Project, Task, createTask, VoidRun } from '../../quireService';
 import { DatePicker } from '@fluentui/react-datepicker-compat';
 import { showError, LoadingView, SettingButton } from '../components/components';
 import TurndownService from 'turndown';
@@ -40,7 +40,7 @@ const useStyle = makeStyles({
   },
 });
 
-const TaskView: React.FC<{ onLogout?: VoidRun }> = ({ onLogout }) => {
+const TaskView: React.FC<{ onLogout?: VoidRun, onLogoutWithError?: (error?: string) => void }> = ({ onLogout, onLogoutWithError }) => {
   const [view, setView] = React.useState<'create' | 'done' | 'loading'>('loading');
   const descriptionRef = React.useRef<string>("");
   const projectsRef = React.useRef<Project[]>([]);
@@ -99,7 +99,7 @@ const TaskView: React.FC<{ onLogout?: VoidRun }> = ({ onLogout }) => {
   React.useEffect(() => {
     Promise.all([getProjects(), getDescription()])
       .then(() => setView('create'))
-      .catch((error) => console.error(error));
+      .catch((error) => onLogoutWithError(error));
   }, []);
 
   return getView(view);
@@ -114,8 +114,8 @@ interface CreateTaskProps {
 
 const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
   const style = useStyle();
-  const projectOid = React.useRef<string>(inboxProject.id);
-  const [taskName, setTaskName] = React.useState<string>(`Re: ${Office.context.mailbox.item.subject}`);
+  const projectOid = React.useRef<string | undefined>(prop.projects[0] && prop.projects[0].id);
+  const [taskName, setTaskName] = React.useState<string>(Office.context.mailbox.item.subject);
   const dueDate = React.useRef<Date | undefined>();
   const [assignees, setAssignees] = React.useState<string>("");
   const [tags, setTags] = React.useState<string>("");
@@ -126,6 +126,11 @@ const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
   const labelClasses = mergeClasses(style.task__view__label, style.task__view__full__row);
 
   const turndownService = new TurndownService();
+
+  React.useEffect(() => {
+    if (prop.projects.length === 0)
+      setError(m.M_ERROR_NO_AVAILABLE);
+  }, []);
 
   function wrapContent(title: string, content: React.ReactNode, description?: string) {
     const descriptionClass = mergeClasses(style.task__view__description, style.task__view__full__row);
@@ -197,10 +202,7 @@ const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
       .catch(setError);
   }
 
-  function isCreatable(): boolean {
-    if (taskName.trim() === "") return false;
-    return true;
-  }
+  const isCreatable = !(taskName.trim() === "" || projectOid.current == undefined);
 
   return (
     <div className={style.task__view}>
@@ -215,7 +217,7 @@ const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
       {wrapContent(m.M_FORMCOLUMN_TAGS, inputBuilder(tags, setTags), m.M_FORMCOLUMN_TAGS_DESCRIPTION)}
       {descriptionBuilder()}
       <section className={style.task__view__button__group}>
-        {buttonBuilder({ appearance: 'primary', onClick: onCreate, content: m.M_BUTTON_CREATE, disabled: !isCreatable()})}
+        {buttonBuilder({ appearance: 'primary', onClick: onCreate, content: m.M_BUTTON_CREATE, disabled: !isCreatable})}
         {buttonBuilder({ appearance: 'outline', onClick: prop.onCancel, content: m.M_BUTTON_CANCEL })}
       </section>
 
@@ -244,11 +246,13 @@ const ProjectSelectionDropdown: React.FC<ActionableComponentProps<string>> = (pr
     });
   };
 
+  const firstProject = prop.projects[0];
+
   return (
     <Dropdown
       style={{ width: "100%" }}
-      defaultValue={inboxProject.name}
-      defaultSelectedOptions={[inboxProject.id]}
+      defaultValue={firstProject && firstProject.id}
+      defaultSelectedOptions={[firstProject && firstProject.id]}
       appearance='outline'
       onOptionSelect={onOptionSelect}>
       {...createProjectOptions()}
