@@ -1,8 +1,4 @@
-import { AUTH_URL, KEY_TOKEN, KEY_REFRESH, CLIENT_ID, CLIENT_SECRET, QUIRE_URL, M_ERROR_NO_PROJECT, M_ERROR_NO_AUTH, KEY_CURUSER } from './constants';
-
-export function print(msg: any) {//would remove this cheat later
-  console.log(msg);
-}
+import { AUTH_URL, KEY_TOKEN, KEY_REFRESH, CLIENT_ID, CLIENT_SECRET, QUIRE_URL, M_ERROR_NO_PROJECT, M_ERROR_NO_AUTH, KEY_CURUSER, M_ERROR_TOKEN_EXPIRED } from './constants';
 
 export async function quireAuthentication() {
   let dialog: Office.Dialog;
@@ -41,7 +37,8 @@ async function getToken(type: "auth" | "refresh", data: string) {
       "client_secret": CLIENT_SECRET,
       "code": data,
       "refresh_token": data,
-    }, function (response) {
+    })
+    .done((response) => {
       if (response.error)
         reject(M_ERROR_NO_AUTH);
       else {
@@ -53,8 +50,12 @@ async function getToken(type: "auth" | "refresh", data: string) {
         getCurrentUser();
         resolve();
       }
+    })
+    .fail(() => {
+      localStorage.clear();
+      reject(M_ERROR_NO_AUTH);
     });
-  });
+  })
 }
 
 export async function attemptAutoLogin(): Promise<void> {
@@ -62,7 +63,7 @@ export async function attemptAutoLogin(): Promise<void> {
   if (!refresh_token)
     return Promise.reject(M_ERROR_NO_AUTH);
 
-  return await getToken("refresh", refresh_token)
+  return await getToken("refresh", refresh_token);
 }
 
 export class Project {
@@ -94,8 +95,6 @@ export class Task {
     this.description = description;
   }
 }
-
-export const inboxProject = new Project("-", "Inbox");
 
 export type VoidRun = () => void;
 
@@ -149,19 +148,17 @@ export async function loadProjects() {
       method: 'get',
       onSuccess: (projects) => {
         if (projects instanceof Array) {
-          const list = [
-            inboxProject,
-            ...projects.map((project: any) => new Project(project.id, project.name))
-                .sort((a: Project, b: Project) => a.name.localeCompare(b.name))
-          ]
-          resolve(list);
+          resolve(projects.map((project: any) => new Project(project.id, project.name))
+            .sort((a: Project, b: Project) => a.name.localeCompare(b.name)));
         }
         else
           reject(M_ERROR_NO_PROJECT);
       },
       onError: (error) => {
-        console.error(error);
-        reject(M_ERROR_NO_PROJECT);
+        if (error.status === 401)
+          reject(M_ERROR_TOKEN_EXPIRED);
+        else
+          reject(M_ERROR_NO_PROJECT);
       }
     });
   })
@@ -190,8 +187,10 @@ export async function createTask(task: Task, projectOid: string) {
           reject("Failed to create task.");
       },
       onError(error) {
-        const message = error.responseJSON.message;
-        reject(message);
+        if (error.status === 401)
+          reject(M_ERROR_TOKEN_EXPIRED);
+        else
+          reject(error.responseJSON.message);
       }
     });
   })

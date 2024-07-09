@@ -33,12 +33,17 @@ const App: React.FC = () => {
     setView(AppView.login);
   }
 
+  function onLogoutWithError(error: string) {
+    onLogout();
+    setError(error);
+  }
+
   function getView(view: AppView) {
     switch (view) {
       case AppView.login:
         return <LoginView onLogin={onLogIn} error={error} />;
       case AppView.task:
-        return <TaskView onLogout={onLogout} />;
+        return <TaskView onLogout={onLogout} onLogoutWithError={onLogoutWithError} />;
       case AppView.loading:
         return <LoadingView />
     }
