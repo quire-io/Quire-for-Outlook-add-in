@@ -1,0 +1,21 @@
+name: Add-in Build
+on: push
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        environment: development
+        steps:
+            - uses: actions/checkout@v4
+            - name: Use Node.JS 20 LTS
+              uses: actions/setup-node@v4
+              with:
+                node-version: 20
+            - name: Build Add-in
+              run: |
+                echo "${{ secrets.BUILD_DOTENV }}" | base64 --decode > .env
+                sed -i "/<AppDomain>https:\/\/quire.io\/<\/AppDomain>/a\    ${{ secrets.APP_DOMAIN }}" manifest.xml
+                sed -i "s|const urlProd = \"https://add-in-hosting-cdn-url/\";|const urlProd = \"${{ secrets.URL_PROD }}\";|" webpack.config.js
+                npm install
+                npm run build
+                find ./dist -name "*.map" -type f | xargs rm -f
+                find ./dist -name "*.LICENSE.txt" -type f | xargs rm -f

@@ -1,0 +1,38 @@
+name: Add-in Build and Deploy
+on:
+    push:
+        tags:
+            - "*-prod"
+permissions:
+    id-token: write
+    contents: read
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        environment: production
+        steps:
+            - uses: actions/checkout@v4
+            - name: Use Node.JS 20 LTS
+              uses: actions/setup-node@v4
+              with:
+                node-version: 20
+            - name: Build Add-in
+              run: |
+                echo "${{ secrets.BUILD_DOTENV }}" | base64 --decode > .env
+                sed -i "/<AppDomain>https:\/\/quire.io\/<\/AppDomain>/a\    ${{ secrets.APP_DOMAIN }}" manifest.xml
+                sed -i "s|const urlProd = \"https://add-in-hosting-cdn-url/\";|const urlProd = \"${{ secrets.URL_PROD }}\";|" webpack.config.js
+                npm install
+                npm run build
+                find ./dist -name "*.map" -type f | xargs rm -f
+                find ./dist -name "*.LICENSE.txt" -type f | xargs rm -f
+            - name: Deploy to AWS
+              uses: aws-actions/configure-aws-credentials@v4.0.2
+              with:
+                role-to-assume: ${{ secrets.ROLE_ARN }}
+                role-session-name: GitHub_to_AWS_via_FederatedOIDC
+                aws-region: us-west-2
+            - name: Deploy dist file to prod
+              run: |
+                aws s3 rm --recursive s3://${{ secrets.BUCKET_NAME }}
+                aws s3 cp --recursive ./dist/ s3://${{ secrets.BUCKET_NAME }}
+                aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_ID }} --paths /*
