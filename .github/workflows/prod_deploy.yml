@@ -28,7 +28,7 @@ jobs:
             - name: Deploy to AWS
               uses: aws-actions/configure-aws-credentials@v4.0.2
               with:
-                role-to-assume: ${{ secrets.ROLE_ARN }}
+                role-to-assume: arn:aws:iam::277130567782:role/Github_Action_Deploy_Role
                 role-session-name: GitHub_to_AWS_via_FederatedOIDC
                 aws-region: us-west-2
             - name: Deploy dist file to prod
