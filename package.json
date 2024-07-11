@@ -1,9 +1,9 @@
 {
-  "name": "office-addin-taskpane-react",
-  "version": "0.0.1",
+  "name": "quire-for-outlook-add-in",
+  "version": "0.1.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/OfficeDev/Office-Addin-TaskPane-React.git"
+    "url": "https://github.com/quire-io/Quire-for-Outlook-add-in.git"
   },
   "license": "MIT",
   "config": {

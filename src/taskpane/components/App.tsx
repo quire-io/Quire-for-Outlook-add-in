@@ -20,12 +20,17 @@ const App: React.FC = () => {
   }, [])
 
   async function onLogIn() {
+    setView(AppView.loading);
+
     await quireAuthentication()
       .then(() => {
         setError(undefined);
         setView(AppView.task);
       })
-      .catch(setError);
+      .catch((error) => {
+        setError(error);
+        setView(AppView.login);
+      });
   }
 
   function onLogout() {
