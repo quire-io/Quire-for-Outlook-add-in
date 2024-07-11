@@ -36,4 +36,4 @@ jobs:
               run: |
                 aws s3 rm --recursive s3://${{ secrets.BUCKET_NAME }}
                 aws s3 cp --recursive ./dist/ s3://${{ secrets.BUCKET_NAME }}
-                aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_ID }} --paths /*
+                aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_ID }} --paths "/*"
