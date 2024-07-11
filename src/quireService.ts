@@ -155,10 +155,10 @@ export async function loadProjects() {
           reject(M_ERROR_NO_PROJECT);
       },
       onError: (error) => {
-        if (error.status === 401)
-          reject(M_ERROR_TOKEN_EXPIRED);
-        else
+        if (error.status === 400)
           reject(M_ERROR_NO_PROJECT);
+        else
+          reject(M_ERROR_TOKEN_EXPIRED);
       }
     });
   })
@@ -187,10 +187,10 @@ export async function createTask(task: Task, projectOid: string) {
           reject("Failed to create task.");
       },
       onError(error) {
-        if (error.status === 401)
-          reject(M_ERROR_TOKEN_EXPIRED);
-        else
+        if (error.status === 400)
           reject(error.responseJSON.message);
+        else
+          reject(M_ERROR_TOKEN_EXPIRED);
       }
     });
   })
