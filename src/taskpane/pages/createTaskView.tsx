@@ -2,8 +2,7 @@ import * as React from 'react';
 import * as m from '../../constants';
 import { Dropdown, OptionOnSelectData, Option, makeStyles, SelectionEvents, Label, Input, Textarea, Checkbox, mergeClasses, Button } from '@fluentui/react-components';
 import { loadProjects, Project, Task, createTask, VoidRun } from '../../quireService';
-import { DatePicker } from '@fluentui/react-datepicker-compat';
-import { showError, LoadingView, SettingButton } from '../components/components';
+import { showError, LoadingView, SettingButton, ClearableDatePicker } from '../components/components';
 import TurndownService from 'turndown';
 
 const useStyle = makeStyles({
@@ -209,10 +208,7 @@ const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
       {wrapContent(m.M_FORMCOLUMN_PROJECT,
         <ProjectSelectionDropdown projects={prop.projects} onSelected={(oid) => projectOid.current = oid} />)}
       {wrapContent(m.M_FORMCOLUMN_TASK, inputBuilder(taskName, setTaskName))}
-      {wrapContent(m.M_FORMCOLUMN_DUE,
-        <DatePicker
-          onSelectDate={(date) => dueDate.current = date}
-          className={style.task__view__full__row} />)}
+      {wrapContent(m.M_FORMCOLUMN_DUE, <ClearableDatePicker dueRef={dueDate} />)}
       {wrapContent(m.M_FORMCOLUMN_ASSIGNEES, inputBuilder(assignees, setAssignees), m.M_FORMCOLUMN_ASSIGNEES_DESCRIPTION)}
       {wrapContent(m.M_FORMCOLUMN_TAGS, inputBuilder(tags, setTags), m.M_FORMCOLUMN_TAGS_DESCRIPTION)}
       {descriptionBuilder()}
@@ -251,7 +247,7 @@ const ProjectSelectionDropdown: React.FC<ActionableComponentProps<string>> = (pr
   return (
     <Dropdown
       style={{ width: "100%" }}
-      defaultValue={firstProject && firstProject.id}
+      defaultValue={firstProject && firstProject.name}
       defaultSelectedOptions={[firstProject && firstProject.id]}
       appearance='outline'
       onOptionSelect={onOptionSelect}>

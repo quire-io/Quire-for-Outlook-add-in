@@ -1,8 +1,9 @@
 import { Menu, MenuTrigger, MenuPopover, MenuList, MenuItem, Label, makeStyles, Image } from "@fluentui/react-components";
-import { Settings20Regular, QuestionCircleRegular, SignOutRegular } from "@fluentui/react-icons";
+import { Settings20Regular, QuestionCircleRegular, SignOutRegular, Dismiss20Regular } from "@fluentui/react-icons";
 import { VoidRun } from "../../quireService";
 import React from "react";
 import * as m from "../../constants";
+import { DatePicker } from "@fluentui/react-datepicker-compat";
 
 const useStyle = makeStyles({
   setting__button: {
@@ -22,6 +23,17 @@ const useStyle = makeStyles({
     justifyContent: "center",
     alignItems: "center",
     height: "100vh",
+  },
+  floating__clear__button: {
+    position: "absolute",
+    margin: "6px",
+    right: "50px"
+  },
+  date__picker: {
+    width: "100%",
+    display: "flex",
+    flexWrap: "nowrap",
+    alignItems: "center",
   }
 });
 
@@ -57,4 +69,28 @@ export const LoadingView: React.FC = () => {
     <section className={style.loading__view}>
       <Image src="assets/loading.png" alt="Loading" title="Loading" />
     </section>);
+}
+
+
+export const ClearableDatePicker: React.FC<{ dueRef: React.MutableRefObject<Date | undefined> }> = ({ dueRef }) => {
+  const style = useStyle();
+
+  const [date, setDate] = React.useState<Date | null>(null);
+
+  function onSelect(date?: Date | undefined | null) {
+    dueRef.current = date;
+    setDate(date);
+  }
+
+  return (
+    <div style={{ width: "100%", display: "flex", flexWrap: "nowrap" }}>
+      <DatePicker onSelectDate={onSelect} style={{ width: "100%" }} value={date} />
+      {
+        date &&
+        <div onClick={() => onSelect(null)} className={style.floating__clear__button}>
+          <Dismiss20Regular />
+        </div>
+      }
+    </div>
+  )
 }
