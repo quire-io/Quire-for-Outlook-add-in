@@ -30,6 +30,7 @@ jobs:
               with:
                 role-to-assume: arn:aws:iam::277130567782:role/Github_Action_Deploy_Role
                 role-session-name: GitHub_to_AWS_via_FederatedOIDC
+                role-duration-seconds: 1200
                 aws-region: us-west-2
             - name: Deploy dist file to prod
               run: |

@@ -1,5 +1,8 @@
 name: Add-in Build
-on: push
+on: 
+  push:
+    tags-ignore:
+      - "*-prod"
 jobs:
     build:
         runs-on: ubuntu-latest
