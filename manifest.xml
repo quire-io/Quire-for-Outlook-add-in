@@ -5,10 +5,10 @@
   <ProviderName>Quire</ProviderName><!-- ? Add-in provider name -->
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Quire"/><!-- ? Add-in name -->
-  <Description DefaultValue="Unfold your idea."/><!-- ? Add-in description -->
+  <Description DefaultValue="Never miss a deadline by turning your Outlook emails into actionable tasks in Quire."/><!-- ? Add-in description -->
   <IconUrl DefaultValue="https://localhost:3000/assets/logo_64.png"/>
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/logo_128.png"/>
-  <SupportUrl DefaultValue="https://quire.io/help"/><!-- ? Add-in support url -->
+  <SupportUrl DefaultValue="https://quire.io/apps/outlook-add-in"/><!-- ? Add-in support url -->
   <AppDomains><!-- ! Add-in domains -->
     <AppDomain>https://quire.io/</AppDomain>
   </AppDomains>
