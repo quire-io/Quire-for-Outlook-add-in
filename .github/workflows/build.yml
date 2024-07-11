@@ -1,8 +1,11 @@
 name: Add-in Build
 on: 
   push:
+    branches:
+      - main
     tags-ignore:
       - "*-prod"
+      - "*-staging"
 jobs:
     build:
         runs-on: ubuntu-latest
@@ -20,5 +23,3 @@ jobs:
                 sed -i "s|const urlProd = \"https://add-in-hosting-cdn-url/\";|const urlProd = \"${{ secrets.URL_PROD }}\";|" webpack.config.js
                 npm install
                 npm run build
-                find ./dist -name "*.map" -type f | xargs rm -f
-                find ./dist -name "*.LICENSE.txt" -type f | xargs rm -f
