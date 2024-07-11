@@ -27,7 +27,6 @@ export const M_ERROR_NO_PROJECT = "Failed to fetch projects.";
 export const M_ERROR_NO_AUTH = "Failed to authenticate with Quire.";
 export const M_ERROR_TOKEN_EXPIRED = "Token expired. Please log in again.";
 export const M_ERROR_NO_AVAILABLE = "No available projects in current organization. Please create a project in Quire first.";
-export const M_ERROR_NO_PERMISSION = "You do not have permission to create task in this project.";
 
 // urls
 export const CLIENT_ID = process.env.CLIENT_ID;
