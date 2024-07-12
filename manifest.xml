@@ -10,7 +10,7 @@
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/logo_128.png"/>
   <SupportUrl DefaultValue="https://quire.io/apps/outlook-add-in"/><!-- ? Add-in support url -->
   <AppDomains><!-- ! Add-in domains -->
-    <AppDomain>https://quire.io/</AppDomain>
+    <AppDomain>https://quire.io</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Mailbox"/>
