@@ -196,12 +196,14 @@ const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
     const desc = asPlainText.current ? 
       turndownService.turndown(description) : description;
 
+    const outlookUrl = m.OUTLOOK_INBOX_URL + encodeURIComponent(Office.context.mailbox.item.conversationId);
+
     const task = new Task(
       taskName as string,
       dueDate.current,
       getSplitValueList(assignees),
       getSplitValueList(tags),
-      desc);
+      desc + `\n---\n[${m.M_DESC_VIEW_IN_OUTLOOK}](${outlookUrl})`);
 
     await createTask(task, projectOid.current)
       .then((taskUrl) => {

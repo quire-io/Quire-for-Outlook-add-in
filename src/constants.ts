@@ -28,6 +28,8 @@ export const M_ERROR_NO_AUTH = "Failed to authenticate with Quire.";
 export const M_ERROR_TOKEN_EXPIRED = "Token expired. Please log in again.";
 export const M_ERROR_NO_AVAILABLE = "No available projects in current organization. Please create a project in Quire first.";
 
+export const M_DESC_VIEW_IN_OUTLOOK = "View in Outlook";
+
 // urls
 export const CLIENT_ID = process.env.CLIENT_ID;
 export const CLIENT_SECRET = process.env.CLIENT_SECRET;
@@ -36,11 +38,13 @@ export const REDIRECT_URI = `${HOST_URL}/callback.html`;
 export const QUIRE_URL = process.env.QUIRE_URL;
 export const AUTH_URL = `${QUIRE_URL}/oauth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
 export const HELP_URL = "https://quire.io/apps/outlook-add-in";
+export const OUTLOOK_INBOX_URL = "https://outlook.live.com/mail/0/inbox/id/"
 
 // keys
 export const KEY_TOKEN = "token";
 export const KEY_REFRESH = "refresh_token";
 export const KEY_CURUSER = "current_user";
+export const KEY_DEFAULT_PROJECT = "default_project";
 
 //styles
 export const COLOR_PRIMARY = "#05843E";
