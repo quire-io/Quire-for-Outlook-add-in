@@ -42,7 +42,7 @@ const useStyle = makeStyles({
 const TaskView: React.FC<{ onLogout?: VoidRun, onLogoutWithError?: (error?: string) => void }> = ({ onLogout, onLogoutWithError }) => {
   const [view, setView] = React.useState<'create' | 'done' | 'loading'>('loading');
   const descriptionRef = React.useRef<string>("");
-  const projectsRef = React.useRef<Project[]>([]);
+  const projectsRef = React.useRef<Map<string, Project>>();
   const settingButton = <SettingButton onLogout={onLogout} />;
   const taskUrlRef = React.useRef<string>("");
 
@@ -86,14 +86,13 @@ const TaskView: React.FC<{ onLogout?: VoidRun, onLogoutWithError?: (error?: stri
   }
 
   async function getProjects() {
-    return new Promise<Project[]>((resolve, reject) => {
+    return new Promise<Map<string, Project>>((resolve, reject) => {
       loadProjects().then((projects) => {
         projectsRef.current = projects;
         resolve(projects);
       }).catch((error) => reject(error));
     });
   }
-
 
   React.useEffect(() => {
     Promise.all([getProjects(), getDescription()])
@@ -108,12 +107,11 @@ interface CreateTaskProps {
   onDone: (url: string) => void;
   onCancel: VoidRun;
   description: string;
-  projects: Project[];
+  projects: Map<string, Project>;
 }
 
 const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
   const style = useStyle();
-  const projectOid = React.useRef<string | undefined>(prop.projects[0] && prop.projects[0].id);
   const [taskName, setTaskName] = React.useState<string>(Office.context.mailbox.item.subject);
   const dueDate = React.useRef<Date | undefined>();
   const [assignees, setAssignees] = React.useState<string>("");
@@ -126,10 +124,21 @@ const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
 
   const turndownService = new TurndownService();
 
+  const defaultProject = getDefaultProject();
+  const projectOid = React.useRef<string | undefined>(defaultProject && defaultProject.id);
+
   React.useEffect(() => {
-    if (prop.projects.length === 0)
+    if (Array.from(prop.projects.keys()).length === 0)
       setError(m.M_ERROR_NO_AVAILABLE);
   }, []);
+
+  function getDefaultProject() {
+    const storageProject = localStorage.getItem(m.KEY_DEFAULT_PROJECT);
+    if (storageProject) return prop.projects.get(storageProject);
+
+    const firstProject = Array.from(prop.projects.values())[0];
+    return firstProject; 
+  }
 
   function wrapContent(title: string, content: React.ReactNode, description?: string) {
     const descriptionClass = mergeClasses(style.task__view__description, style.task__view__full__row);
@@ -154,6 +163,7 @@ const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
       <section style={{ display: "flex", gap: "8px", flexDirection: "column" }}>
         <Label className={labelClasses}>{m.M_FORMCOLUMN_DESCRIPTION}</Label>
         <Textarea
+          resize='vertical'
           value={description.toString()}
           onChange={(_, data) => setDescription(data.value)}
           className={style.task__view__full__row} />
@@ -196,6 +206,7 @@ const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
     await createTask(task, projectOid.current)
       .then((taskUrl) => {
         setError(undefined);
+        localStorage.setItem(m.KEY_DEFAULT_PROJECT, projectOid.current as string);
         prop.onDone(taskUrl);
       })
       .catch(setError);
@@ -206,7 +217,7 @@ const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
   return (
     <div className={style.task__view}>
       {wrapContent(m.M_FORMCOLUMN_PROJECT,
-        <ProjectSelectionDropdown projects={prop.projects} onSelected={(oid) => projectOid.current = oid} />)}
+        <ProjectSelectionDropdown projects={prop.projects} onSelected={(oid) => projectOid.current = oid} defaultProject={defaultProject} />)}
       {wrapContent(m.M_FORMCOLUMN_TASK, inputBuilder(taskName, setTaskName))}
       {wrapContent(m.M_FORMCOLUMN_DUE, <ClearableDatePicker dueRef={dueDate} />)}
       {wrapContent(m.M_FORMCOLUMN_ASSIGNEES, inputBuilder(assignees, setAssignees), m.M_FORMCOLUMN_ASSIGNEES_DESCRIPTION)}
@@ -224,16 +235,17 @@ const CreateView: React.FC<CreateTaskProps> = (prop: CreateTaskProps) => {
 
 interface ActionableComponentProps<T> {
   onSelected?: (selected: T) => void;
-  projects: Project[];
+  projects: Map<string, Project>;
+  defaultProject?: Project;
 }
 
-const ProjectSelectionDropdown: React.FC<ActionableComponentProps<string>> = (prop: ActionableComponentProps<string>) => {
+const ProjectSelectionDropdown: React.FC<ActionableComponentProps<string>> = ({ onSelected, projects, defaultProject }) => {
   function onOptionSelect(_: SelectionEvents, data: OptionOnSelectData) {
-    prop.onSelected?.(data.optionValue);
+    onSelected?.(data.optionValue);
   }
 
   function createProjectOptions() {
-    return prop.projects.map((project) => {
+    return Array.from(projects.values()).map((project) => {
       return <Option
         style={{ overflow: "clip" }}
         value={project.id}>
@@ -242,13 +254,11 @@ const ProjectSelectionDropdown: React.FC<ActionableComponentProps<string>> = (pr
     });
   };
 
-  const firstProject = prop.projects[0];
-
   return (
     <Dropdown
       style={{ width: "100%" }}
-      defaultValue={firstProject && firstProject.name}
-      defaultSelectedOptions={[firstProject && firstProject.id]}
+      defaultValue={defaultProject && defaultProject.name}
+      defaultSelectedOptions={[defaultProject && defaultProject.id]}
       appearance='outline'
       onOptionSelect={onOptionSelect}>
       {...createProjectOptions()}

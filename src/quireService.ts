@@ -1,4 +1,4 @@
-import { AUTH_URL, KEY_TOKEN, KEY_REFRESH, CLIENT_ID, CLIENT_SECRET, QUIRE_URL, M_ERROR_NO_PROJECT, M_ERROR_NO_AUTH, KEY_CURUSER, M_ERROR_TOKEN_EXPIRED } from './constants';
+import { AUTH_URL, KEY_TOKEN, KEY_REFRESH, CLIENT_ID, CLIENT_SECRET, QUIRE_URL, M_ERROR_NO_PROJECT, M_ERROR_NO_AUTH, KEY_CURUSER, M_ERROR_TOKEN_EXPIRED, KEY_DEFAULT_PROJECT } from './constants';
 
 export async function quireAuthentication() {
   let dialog: Office.Dialog;
@@ -142,14 +142,37 @@ export async function getCurrentUser() {
 }
 
 export async function loadProjects() {
-  return await new Promise<Project[]>((resolve, reject) => {
+  return await new Promise<Map<string, Project>>((resolve, reject) => {
     quireApi({
       url: api_getProjects,
       method: 'get',
       onSuccess: (projects) => {
         if (projects instanceof Array) {
-          resolve(projects.map((project: any) => new Project(project.id, project.name))
-            .sort((a: Project, b: Project) => a.name.localeCompare(b.name)));
+          const user = localStorage.getItem(KEY_CURUSER),
+            defaultProject = localStorage.getItem(KEY_DEFAULT_PROJECT),
+            prjMap = new Map<string, Project>();
+          
+          let inbox: string,
+            defaultLoaded = false;
+          
+          projects
+            .sort((a: Project, b: Project) => a.name.localeCompare(b.name))
+            .map((project) => {
+              if ((project.oid as string).includes(user as string))
+                inbox = project.id;
+              if (project.id === defaultProject)
+                defaultLoaded = true;
+
+              prjMap.set(project.id, new Project(project.id, project.name));
+            });
+
+          if (!defaultLoaded) {
+            localStorage.removeItem(KEY_DEFAULT_PROJECT);
+            if (inbox)
+              localStorage.setItem(KEY_DEFAULT_PROJECT, inbox);
+          }
+
+          resolve(prjMap);
         }
         else
           reject(M_ERROR_NO_PROJECT);
