@@ -2,7 +2,7 @@
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0" xsi:type="MailApp">
   <Id>5e85270f-dbfc-45fc-b7ca-8618e10e1d8a</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>Quire</ProviderName><!-- ? Add-in provider name -->
+  <ProviderName>Potix Corporation</ProviderName><!-- ? Add-in provider name -->
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Quire"/><!-- ? Add-in name -->
   <Description DefaultValue="Never miss a deadline by turning your Outlook emails into actionable tasks in Quire."/><!-- ? Add-in description -->
